@@ -1,0 +1,26 @@
+{
+  "name": "mb-migrations",
+  "version": "1.0.0",
+  "description": "Database schema updates and migrations for MB project",
+  "scripts": {
+    "migration:generate": "npx prisma generate",
+    "migration:run": "npx prisma migrate dev --name init",
+    "seed": "ts-node prisma/seed.ts",
+    "seed-dropdown": "ts-node prisma/dropdown-seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "7.0.1",
+    "@prisma/adapter-pg": "7.0.1",
+    "pg": "^8.11.0",
+    "bcrypt": "6.0.0",
+    "dotenv": "17.2.3"
+  },
+  "devDependencies": {
+    "prisma": "7.0.1",
+    "ts-node": "10.9.2",
+    "typescript": "5.7.3",
+    "@types/node": "22.10.7",
+    "@types/bcrypt": "^3.0.0",
+    "@types/pg": "^8.11.0"
+  }
+}
