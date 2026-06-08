@@ -2342,13 +2342,14 @@ model AutomationFilter {
 }
 
 model AutomationTask {
-  id       String             @id @default(uuid())
-  ruleId   String
-  rule     AutomationRule     @relation(fields: [ruleId], references: [id], onDelete: Cascade)
-  kind     AutomationTaskKind
-  subtitle String?
-  params   Json?
-  position Int                @default(0)
+  id          String             @id @default(uuid())
+  ruleId      String
+  rule        AutomationRule     @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  kind        AutomationTaskKind
+  subtitle    String?
+  description String? // UI-only annotation per task (Bir.ch parity); not used by the runner
+  params      Json?
+  position    Int                @default(0)
 
   rootGroup AutomationTaskGroup?    @relation("AutomationTaskRoot")
   groups    AutomationTaskGroup[]   @relation("AutomationTaskAllGroups")
