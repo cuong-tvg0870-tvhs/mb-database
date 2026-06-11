@@ -4,7 +4,7 @@
   "description": "Database schema updates and migrations for MB project",
   "scripts": {
     "migration:generate": "npx prisma generate",
-    "migration:run": "npx prisma migrate dev --name init",
+    "migration:run": "npx prisma migrate dev --name init && node sync-schemas.js",
     "seed": "ts-node prisma/seed.ts",
     "seed-dropdown": "ts-node prisma/dropdown-seed.ts"
   },
