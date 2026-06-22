@@ -2610,6 +2610,16 @@ model HelpChapter {
   updatedAt DateTime @updatedAt
 }
 
+model HelpAiKnowledgeSnapshot {
+  id          String   @id @default(uuid())
+  sourceHash  String   @unique
+  content     String   @db.Text
+  status      String   @default("READY")
+  generatedBy String   @default("mb-batch")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 enum ProposalStatus {
   PENDING
   APPROVED
