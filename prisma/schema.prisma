@@ -2572,6 +2572,8 @@ enum ContributionStatus {
   PROCESSED
   FEEDBACKED
   REJECTED
+  CLOSED
+  REOPENED
 }
 
 model Contribution {
