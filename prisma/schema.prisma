@@ -160,6 +160,7 @@ model User {
   processedContributions Contribution[] @relation("ProcessedContributions")
   proposals              AccountProposal[] @relation("UserProposals")
   processedProposals     AccountProposal[] @relation("ProcessedProposals")
+  helpChatSessions       HelpChatSession[] @relation("UserHelpChatSessions")
 }
 
 model UserActivity {
@@ -2618,6 +2619,31 @@ model HelpAiKnowledgeSnapshot {
   generatedBy String   @default("mb-batch")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model HelpChatSession {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation("UserHelpChatSessions", fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  messages  HelpChatMessage[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId, deletedAt])
+  @@index([updatedAt])
+}
+
+model HelpChatMessage {
+  id        String          @id @default(uuid())
+  sessionId String
+  session   HelpChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String
+  content   String          @db.Text
+  createdAt DateTime        @default(now())
+
+  @@index([sessionId, createdAt])
 }
 
 enum ProposalStatus {
