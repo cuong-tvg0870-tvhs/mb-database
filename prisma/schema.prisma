@@ -2365,6 +2365,11 @@ model AutomationRule {
   useAdSetAttributionWindow Boolean @default(true)
   attributionWindow         String?
 
+  // When true, matched items are auto-confirmed by the runner and pushed to the
+  // executor in the same tick — no manual confirm step. Default false preserves
+  // the manual-confirm behaviour for every existing rule.
+  autoExecute Boolean @default(false)
+
   categoryId String
   category   AutomationCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
