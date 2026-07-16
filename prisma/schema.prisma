@@ -3405,6 +3405,12 @@ model CampaignRule {
 
   timezone            String // IANA name, hoặc sentinel "account" (resolve theo tz ad account lúc chạy)
   notifyErrorsOnly    Boolean                   @default(false)
+  // Email CHỦ ĐỘNG khi rule chạy (opt-in per-rule; người nhận = notifyUsers). Real-time
+  // theo SỰ KIỆN, chống gửi trùng qua CampaignRuleRunItem.notifiedAt. "matched" chỉ bắn
+  // khi CHUYỂN not-matched→matched (không lặp mỗi lần quét khi điều kiện vẫn đang đúng).
+  notifyOnMatch       Boolean                   @default(false) // đủ điều kiện (kể cả PENDING chờ duyệt)
+  notifyOnExecute     Boolean                   @default(false) // đã đẩy Meta thành công
+  notifyOnError       Boolean                   @default(false) // rule/đẩy Meta lỗi
   filterGroupOperator CampaignRuleGroupOperator @default(OR)
   position            Int                       @default(0)
 
@@ -3423,6 +3429,7 @@ model CampaignRule {
   filterGroups CampaignRuleFilterGroup[]
   tasks        CampaignRuleTask[]
   runs         CampaignRuleRun[]
+  notifyUsers  CampaignRuleNotifyUser[]
 
   createdById String?
   createdAt   DateTime  @default(now())
@@ -3434,6 +3441,19 @@ model CampaignRule {
   @@index([accountId, updatedAt(sort: Desc)])
   @@index([createdById, updatedAt(sort: Desc)])
   @@map("campaign_rule")
+}
+
+// Junction người nhận email của 1 campaign_rule (opt-in per-rule). Scalar FK tới User
+// (legacy, ngoài cụm) — chỉ giữ userId, resolve email lúc gửi. Giống AutomationRuleNotifyUser.
+model CampaignRuleNotifyUser {
+  ruleId String
+  userId String
+
+  rule CampaignRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@id([ruleId, userId])
+  @@index([userId])
+  @@map("campaign_rule_notify_user")
 }
 
 // Mẫu quy tắc "lên lịch theo điều kiện" (cuốn chiếu): lưu lại ĐIỀU KIỆN + cấu hình
@@ -3630,6 +3650,10 @@ model CampaignRuleRunItem {
   // Id các HighDemandPeriod (budget_schedule) Meta trả về khi đẩy thành công —
   // lưu để sau này TẮT/XOÁ lịch trên Meta (new HighDemandPeriod(id).delete()).
   metaBudgetScheduleIds String[] @default([])
+
+  // Đã gửi email thông báo cho item này chưa — chống gửi trùng (1 mail / sự kiện).
+  // null = chưa gửi / không thuộc diện notify. Set khi cron mb-ads gửi mail xong.
+  notifiedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
