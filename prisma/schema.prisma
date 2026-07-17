@@ -3196,6 +3196,15 @@ model AutomationInsightBackfillState {
   oldestSettledDate   String?
   lastSettledDate     String?
   lastRevalidatedAt   DateTime?
+  /// Recent-window shared cache (P0-a): the background refresher re-fetches the
+  /// still-volatile `[today-freeze .. today]` days into the daily table every
+  /// ~AUTOMATION_INSIGHT_RECENT_REFRESH_MIN minutes so rules read them from DB
+  /// instead of a live Meta query. `recentThroughDate` = the last day covered
+  /// (= today at refresh); `lastRecentRefreshAt` = when it last ran. The read
+  /// path serves the volatile zone from DB only while this is fresh (within
+  /// 2× the cadence) — otherwise it falls back to the live path (fail-safe).
+  recentThroughDate   String?
+  lastRecentRefreshAt DateTime?
   /// Last time an ACTIVE rule (run or warmer) confirmed this (account, apiLevel)
   /// is still in use. The maintain scheduler skips states whose lastEvaluatedAt
   /// is null or older than AUTOMATION_INSIGHT_STALE_DAYS so deleted/paused rules
