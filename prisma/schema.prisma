@@ -3695,7 +3695,7 @@ enum AutoLaunchRunStatus {
   SKIPPED_NOT_ENOUGH // chưa gom đủ N creative đạt chuẩn
   SKIPPED_DAILY_CAP // đã chạm trần camp/ngày
   SKIPPED_NO_NEW // đủ chỉ số nhưng hết creative MỚI (đã dùng hết)
-  FAILED // lỗi khi dựng/đăng
+  FAILED // lỗi khi dựng/đăng (cũng dùng làm trạng thái CLAIM tạm: insert-first mang dedupeKey rồi update thành trạng thái cuối)
 }
 
 model AutoLaunchRule {
@@ -3758,8 +3758,8 @@ model AutoLaunchRuleRun {
   message      String? // diễn giải ngắn cho marketer
 
   // Khi LAUNCHED:
-  usedCreatives       Json? // [{ id, name, roas }] — creative thực sự đưa vào camp
-  generatedCampaignId String? // SystemCampaign.id sinh ra
+  usedCreatives       Json? // [{ id, name, roas, campaignId }] — creative đưa vào camp + camp nào (ledger per-campaign + đếm trần theo distinct campaignId, KHÔNG cần migration)
+  generatedCampaignId String? // SystemCampaign.id sinh ra (camp ĐẦU — tương thích ngược)
   metaId              String? // meta campaign id (nếu đã tự đăng)
   mode                DraftAutomationPublishMode?
 
