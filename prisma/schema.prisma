@@ -3434,6 +3434,12 @@ model CampaignRule {
   // đồng bộ 1-1 với Meta. Bản do user "Gửi ngay" tạo = false.
   syncedFromMeta Boolean @default(false)
 
+  // Mẫu (CampaignRuleTemplate.id) mà rule này được áp từ — đóng dấu lúc TẠO nếu user bấm
+  // "Dùng mẫu". Scalar (không relation, mẫu ngoài cụm scope). Dùng để đếm "mẫu đã áp cho
+  // bao nhiêu chiến dịch" → biết mẫu nào hiệu quả để giữ / mẫu nào chưa ai dùng để clear.
+  // CHỈ có từ lúc thêm cột trở đi (rule cũ = null, không lấp ngược được).
+  sourceTemplateId String?
+
   schedule     CampaignRuleSchedule?
   filterGroups CampaignRuleFilterGroup[]
   tasks        CampaignRuleTask[]
@@ -3449,6 +3455,7 @@ model CampaignRule {
   @@index([campaignId, adSetId, status])
   @@index([accountId, updatedAt(sort: Desc)])
   @@index([createdById, updatedAt(sort: Desc)])
+  @@index([sourceTemplateId])
   @@map("campaign_rule")
 }
 
