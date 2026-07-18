@@ -3027,6 +3027,11 @@ enum AutomationRuleRunStatus {
   FAILED
   SKIPPED_OVERLAP
   SKIPPED_OUT_OF_DATE_RANGE
+  // Proactively skipped this tick because the ad account was near its Meta
+  // rate/insights-throttle limit (or over the per-account concurrency cap). A
+  // HEALTHY skip, not a failure: the next tick retries. Running fewer times but
+  // succeeding beats running every tick and failing on #4.
+  SKIPPED_RATE_LIMIT
 }
 
 enum AutomationRuleRunItemStatus {
