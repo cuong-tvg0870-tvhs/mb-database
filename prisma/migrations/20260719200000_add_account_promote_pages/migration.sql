@@ -1,0 +1,14 @@
+-- Lưu quyền THẬT của từng TKQC: các Fanpage mà chính ad account này được phép
+-- quảng bá (Meta edge `act_<id>?fields=promote_pages{id,name}`).
+--
+-- Vì sao cần: `Account.pages` hiện là danh sách Trang USER quản lý (edge
+-- me/accounts) và được nhồi GIỐNG NHAU vào mọi TKQC → không phản ánh quyền
+-- per-TKQC. Còn `promote_pages` là quyền per-account thật, mỗi TKQC một danh
+-- sách khác nhau. Dùng để gate scale/re-use dark post cross-account (chỉ cho
+-- dùng object_story_id `{pageId}_...` khi pageId ∈ promotePages của TKQC đích),
+-- tránh lỗi Meta 1815017.
+--
+-- Additive, non-breaking: cột nullable JSONB, account cũ = NULL cho tới lần sync
+-- kế tiếp (entity-sync mb-batch / nút Sync + onboard mb-ads đổ dữ liệu vào).
+-- Shape: [{ "id": "<pageId>", "name": "<pageName>" }].
+ALTER TABLE "Account" ADD COLUMN "promotePages" JSONB;
