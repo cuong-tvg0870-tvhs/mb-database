@@ -1,0 +1,24 @@
+-- TEST CONTENT TỰ ĐỘNG: cho DraftAutomation một cột lịch dạng JSON, CÙNG shape với
+-- `auto_launch_rule.schedule` (màn "Scale bài hiệu quả") để hai màn dùng chung đúng một
+-- bộ điều khiển lịch (RuleScheduleSetting + lưới 7 ngày × 24 giờ).
+--
+-- Vì sao KHÔNG tái dùng scheduleType/intervalMinutes/cronExpression:
+--   Lưới SPECIFIC cho phép MỖI NGÀY một tập khung giờ riêng, sub-slot 15/30/45 phút
+--   (vd thứ 2 chạy 09:00 + 14:30, thứ 7 chỉ 20:15). Một chuỗi cron không biểu diễn
+--   được tập đó — `0 9,14 * * 1` mất phút lẻ, còn tách nhiều cron thì cột
+--   `cronExpression` (String đơn) không chứa nổi. Ép nén sẽ làm UI phải từ chối những
+--   cấu hình trông hoàn toàn hợp lệ trên lưới.
+--
+-- Additive, non-breaking:
+--   - Cột nullable, không default ⇒ writer cũ (mb-ads/mb-batch bản chưa deploy) INSERT
+--     bình thường; row hiện có giữ NULL.
+--   - NULL = "automation cũ, chạy bằng cột phẳng". Reader đọc `schedule` TRƯỚC, thiếu
+--     thì fallback scheduleType/intervalMinutes/cronExpression — nên thứ tự deploy
+--     giữa mb-ads và mb-batch không quan trọng.
+--   - KHÔNG backfill: suy ngược cron → specificSlots là lossy và không cần thiết. Row cũ
+--     tiếp tục chạy đúng bằng đường cũ cho tới khi người dùng mở form và lưu lại.
+--
+-- Rollout: apply migration này TRƯỚC khi deploy mb-ads/mb-batch. Rollback = DROP COLUMN,
+-- an toàn vì không reader nào bắt buộc cột này tồn tại (fallback luôn còn đó).
+
+ALTER TABLE "DraftAutomation" ADD COLUMN "schedule" JSONB;
