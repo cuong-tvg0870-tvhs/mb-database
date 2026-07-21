@@ -343,7 +343,7 @@ model Account {
   /// `object_story_id = {pageId}_...` khi pageId nằm trong promotePages của TKQC
   /// đích (tránh Meta 1815017). Shape: [{ id, name }]. Do entity-sync (mb-batch)
   /// + các nút Sync/onboard (mb-ads) ghi vào; null = chưa sync lần nào.
-  promotePages    Json?
+  promotePages Json?
 
   /// FK to the MetaConnection whose access token authorises Meta Graph calls
   /// targeting this ad account. Nullable while a connection has not yet been
@@ -2834,6 +2834,13 @@ model AutomationCategory {
   // category top-level (cùng cấp với project trên sidebar, giữ hành vi cũ).
   projectId String?
 
+  // Nhân bản danh mục chạy nền (BullMQ). null = category thường (mọi row cũ).
+  // Khi PENDING/RUNNING, FE hiện spinner + màn "đang nhân bản" thay cây folder và
+  // BE từ chối rename/move/reorder (nhưng vẫn cho xoá bản FAILED).
+  cloneStatus   AutomationCategoryCloneStatus?
+  cloneError    String?
+  cloneSourceId String?
+
   folders          AutomationFolder[]
   rules            AutomationRule[]
   customMetrics    CustomMetric[]
@@ -2846,6 +2853,13 @@ model AutomationCategory {
 
   @@index([createdById, position])
   @@index([projectId])
+}
+
+enum AutomationCategoryCloneStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
 }
 
 model AutomationFolder {
