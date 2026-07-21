@@ -1,0 +1,21 @@
+-- Mục đích: lưu THỊ TRƯỜNG thật của từng TKQC (Meta `business_country_code`) để
+-- search targeting chạy theo đúng thị trường tài khoản, thay vì suy tạm từ timezone.
+--
+-- Vì sao không suy từ `currency`: rất nhiều TKQC chạy thị trường Đông Nam Á nhưng
+-- để currency USD → currency KHÔNG chỉ ra thị trường. `timezone` bám sát hơn nhưng
+-- vẫn là suy đoán; `business_country_code` là mã quốc gia Meta khai cho tài khoản.
+--
+-- Back-compat: cột NULLABLE, không default, không backfill được từ dữ liệu sẵn có.
+-- NULL = TKQC chưa được sync lại kể từ khi thêm cột. App xử lý NULL bằng cách rơi về
+-- suy đoán theo `timezone` (resolveAccountLocale trong meta-locale.util), nên không
+-- có khoảng "chết" giữa lúc apply migration và lúc entity-sync chạy lần kế.
+--
+-- Cột được ghi bởi CẢ HAI writer (phải giữ parity):
+--   * mb-ads  meta.service.ts  — nút Sync / onboard TKQC
+--   * mb-batch entity-sync.service.ts — cron sync hằng ngày 01:00
+-- Kèm theo: `business_country_code` đã được thêm vào AD_ACCOUNT_FIELDS ở CẢ HAI repo.
+--
+-- Rollout: additive thuần, apply lúc nào cũng được, không cần dừng writer.
+
+-- AlterTable
+ALTER TABLE "Account" ADD COLUMN     "countryCode" TEXT;
