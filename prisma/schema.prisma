@@ -209,7 +209,26 @@ model User {
   assignedAssetRequests  AssetAccessRequest[] @relation("AssetReqAssignee")
   processedAssetRequests AssetAccessRequest[] @relation("AssetReqProcessor")
 
+  passwordResetTokens PasswordResetToken[]
+
   @@index([larkOpenId]) // tra nhanh mọi tài khoản MB của 1 người Lark (notify/Larkbase)
+}
+
+// Token khôi phục mật khẩu (luồng "Quên mật khẩu" ở màn đăng nhập).
+// Chỉ lưu HASH (SHA-256) của token; token thô chỉ nằm trong link email gửi cho
+// user → DB rò rỉ cũng không dùng lại được. Token dùng MỘT LẦN (usedAt) + hết
+// hạn ngắn (expiresAt). Additive thuần: bảng mới, không đụng model cũ.
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique // SHA-256 của token thô
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model UserActivity {
