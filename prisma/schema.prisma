@@ -3176,6 +3176,13 @@ enum AutomationRuleRunStatus {
   // worker long after `scheduledFor`. Evaluating it would spend Meta calls to
   // act on stale intent, so it is dropped instead — visibly, not silently.
   SKIPPED_STALE
+  // Meta could not serve this run's data right now (a transient #1/#2/5xx, a
+  // throttle, or our own pacing) and the run is WAITING to be retried inside the
+  // same schedule slot. NOT terminal and NOT a failure: the same run row is put
+  // back to RUNNING when the retry starts. Meta's documented penalties are
+  // seconds-to-minutes, so a retry costs far less than skipping a whole interval
+  // — which for a long-interval rule (up to 72h) used to be the only outcome.
+  DEFERRED
 }
 
 enum AutomationRuleRunItemStatus {
@@ -3214,6 +3221,14 @@ model AutomationRuleRun {
   matchedCount    Int @default(0)
   errorsCount     Int @default(0)
 
+  // Retry/checkpoint metadata for DEFERRED runs. These fields are informational
+  // for the UI and operational for the runner's same-slot resume.
+  deferReason   String?
+  deferAttempt  Int       @default(0)
+  nextRetryAt   DateTime?
+  resumePhase   String?
+  checkpointKey String?
+
   errorMessage String?
   ruleSnapshot Json?
 
@@ -3225,6 +3240,7 @@ model AutomationRuleRun {
   @@index([ruleId, scheduledFor(sort: Desc)])
   @@index([accountId, scheduledFor(sort: Desc)])
   @@index([status, scheduledFor(sort: Desc)])
+  @@index([ruleId, accountId, status])
 }
 
 /// Mỗi entity match 1 task = 1 row, lưu snapshot + change preview cho UI log-detail.
@@ -3284,6 +3300,7 @@ model AutomationRuleRunItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([runId, taskId, entityId])
   @@index([runId])
   @@index([entityId])
   @@index([taskId])
